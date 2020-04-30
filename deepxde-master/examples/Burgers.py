@@ -66,7 +66,7 @@ def plot_best_state(train_state):
     for i in range(y_dim):
         plt.plot(X_train[:, 0], y_train[:, i], label="Train")
         plt.plot(X, y_test[idx, i], label="True") #<===
-        plt.scatter(X, best_y[idx, i], c='#666666', label="Prediction") #<===
+        plt.scatter(X, best_y[idx, i], label="Prediction") #<===
         plt.gray()
         if best_ystd is not None:
             plt.plot(X, best_y[idx, i] + 2 * best_ystd[idx, i], label="95% CI") #<===
@@ -126,27 +126,27 @@ def pde(x, y):
     dy_xx = tf.gradients(dy_x, x)[0][:, 0:1]
     return dy_t + y * dy_x - 0.01 / np.pi * dy_xx
 
-geom = dde.geometry.Interval(-1, 1)
-timedomain = dde.geometry.TimeDomain(0, 0.99)
-geomtime = dde.geometry.GeometryXTime(geom, timedomain)
-
-bc = dde.DirichletBC(
-    geomtime, lambda x: np.zeros((len(x), 1)), lambda _, on_boundary: on_boundary
-)
-ic = dde.IC(
-    geomtime, lambda x: -np.sin(np.pi * x[:, 0:1]), lambda _, on_initial: on_initial
-)
-
-data = dde.data.TimePDE(
-    geomtime, 1, pde, [bc, ic], num_domain=2540, num_boundary=80, num_initial=160
-)
-net = dde.maps.FNN([2] + [20] * 3 + [1], "tanh", "Glorot normal")
-model = dde.Model(data, net)
-
-model.compile("adam", lr=1e-3)
-model.train(epochs=15000)
-model.compile("L-BFGS-B")
-losshistory, train_state = model.train()
+#geom = dde.geometry.Interval(-1, 1)
+#timedomain = dde.geometry.TimeDomain(0, 0.99)
+#geomtime = dde.geometry.GeometryXTime(geom, timedomain)
+#
+#bc = dde.DirichletBC(
+#    geomtime, lambda x: np.zeros((len(x), 1)), lambda _, on_boundary: on_boundary
+#)
+#ic = dde.IC(
+#    geomtime, lambda x: -np.sin(np.pi * x[:, 0:1]), lambda _, on_initial: on_initial
+#)
+#
+#data = dde.data.TimePDE(
+#    geomtime, 1, pde, [bc, ic], num_domain=2540, num_boundary=80, num_initial=160
+#)
+#net = dde.maps.FNN([2] + [20] * 3 + [1], "tanh", "Glorot normal")
+#model = dde.Model(data, net)
+#
+#model.compile("adam", lr=1e-3)
+#model.train(epochs=15000)
+#model.compile("L-BFGS-B")
+#losshistory, train_state = model.train()
 saveplot(losshistory, train_state, issave=True, isplot=True)
 
 X, y_true = gen_testdata()

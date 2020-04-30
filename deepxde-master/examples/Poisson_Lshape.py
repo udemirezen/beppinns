@@ -14,7 +14,7 @@ def main():
         dy_x, dy_y = dy_x[:, 0:1], dy_x[:, 1:]
         dy_xx = tf.gradients(dy_x, x)[0][:, 0:1]
         dy_yy = tf.gradients(dy_y, x)[0][:, 1:]
-        return -dy_xx - dy_yy - 1
+        return -dy_xx - dy_yy #- 1
 
     def boundary(x, on_boundary):
         return on_boundary
