@@ -124,10 +124,11 @@ def pde(x, y):
     dy_x = tf.gradients(y, x)[0]
     dy_x, dy_t = dy_x[:, 0:1], dy_x[:, 1:2]
     dy_xx = tf.gradients(dy_x, x)[0][:, 0:1]
-    return dy_t + y * dy_x - 0.01 / np.pi * dy_xx
+    dy_tt = tf.gradients(dy_t, x)[0][:, 1:2]
+    return dy_tt - dy_xx
 
 geom = dde.geometry.Interval(-1, 1)
-timedomain = dde.geometry.TimeDomain(0, 0.99)
+timedomain = dde.geometry.TimeDomain(0, 7.49)
 geomtime = dde.geometry.GeometryXTime(geom, timedomain)
 
 bc = dde.DirichletBC(
@@ -138,13 +139,13 @@ ic = dde.IC(
 )
 
 data = dde.data.TimePDE(
-    geomtime, 1, pde, [bc, ic], num_domain=2540, num_boundary=80, num_initial=160
+    geomtime, 1, pde, [bc, ic], num_domain=5080, num_boundary=320, num_initial=160
 )
 net = dde.maps.FNN([2] + [20] * 3 + [1], "tanh", "Glorot normal")
 model = dde.Model(data, net)
 
 model.compile("adam", lr=1e-3)
-model.train(epochs=15000) #was 15000 epochs
+model.train(epochs=5000) #was 15000 epochs
 model.compile("L-BFGS-B")
 losshistory, train_state = model.train()
 saveplot(losshistory, train_state, issave=True, isplot=True)

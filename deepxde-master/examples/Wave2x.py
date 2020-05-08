@@ -110,50 +110,48 @@ def save_best_state(train_state, fname_train, fname_test):
     np.savetxt(fname_test, test, header="x, y_true, y_pred, y_std")
 
 
-def gen_testdata():
-    data = np.load("dataset/Burgers.npz")
-    t, x, exact = data["t"], data["x"], data["usol"].T
-    xx, tt = np.meshgrid(x, t)
-    X = np.vstack((np.ravel(xx), np.ravel(tt))).T
-    y = exact.flatten()[:, None]
-    return X, y
 
 
 
 def pde(x, y):
-    dy_x = tf.gradients(y, x)[0]
-    dy_x, dy_t = dy_x[:, 0:1], dy_x[:, 1:2]
-    dy_xx = tf.gradients(dy_x, x)[0][:, 0:1]
-    return dy_t + y * dy_x - 0.01 / np.pi * dy_xx
+    y1, y2 = y[:,0:1],y[:,1:]
+    dy1_x = tf.gradients(y1, x)[0]
+    dy1_x, dy1_t = dy1_x[:, 0:1], dy1_x[:, 1:2]
+    dy1_xx = tf.gradients(dy1_x, x)[0][:, 0:1]
+    dy1_tt = tf.gradients(dy1_t, x)[0][:, 1:2]
+    dy2_x = tf.gradients(y2, x)[0]
+    dy2_x, dy2_t = dy2_x[:, 0:1], dy2_x[:, 1:2]
+    dy2_xx = tf.gradients(dy2_x, x)[0][:, 0:1]
+    dy2_tt = tf.gradients(dy2_t, x)[0][:, 1:2]
+
+    return [dy1_tt - dy1_xx, dy2_tt - dy2_xx]
 
 geom = dde.geometry.Interval(-1, 1)
-timedomain = dde.geometry.TimeDomain(0, 0.99)
+timedomain = dde.geometry.TimeDomain(0, 7.49)
 geomtime = dde.geometry.GeometryXTime(geom, timedomain)
 
-bc = dde.DirichletBC(
-    geomtime, lambda x: np.zeros((len(x), 1)), lambda _, on_boundary: on_boundary
+bc1 = dde.DirichletBC(
+    geomtime, lambda x: np.zeros((len(x), 1)), lambda _, on_boundary: on_boundary, component=0
 )
-ic = dde.IC(
-    geomtime, lambda x: -np.sin(np.pi * x[:, 0:1]), lambda _, on_initial: on_initial
+bc2 = dde.DirichletBC(
+    geomtime, lambda x: np.zeros((len(x), 1)), lambda _, on_boundary: on_boundary, component=1
+)
+ic1 = dde.IC(
+    geomtime, lambda x: -np.sin(np.pi * x[:, 0:1]), lambda _, on_initial: on_initial, component=0
+)
+ic2 = dde.IC(
+    geomtime, lambda x: np.sin(np.pi * x[:, 0:1]), lambda _, on_initial: on_initial, component=1
 )
 
 data = dde.data.TimePDE(
-    geomtime, 1, pde, [bc, ic], num_domain=2540, num_boundary=80, num_initial=160
+    geomtime, 2, pde, [bc1, bc2, ic1, ic2], num_domain=5080, num_boundary=320, num_initial=160
 )
 net = dde.maps.FNN([2] + [20] * 3 + [1], "tanh", "Glorot normal")
 model = dde.Model(data, net)
 
 model.compile("adam", lr=1e-3)
-model.train(epochs=15000) #was 15000 epochs
+model.train(epochs=5000) #was 15000 epochs
 model.compile("L-BFGS-B")
 losshistory, train_state = model.train()
 saveplot(losshistory, train_state, issave=True, isplot=True)
-
-X, y_true = gen_testdata()
-y_pred = model.predict(X)
-f = model.predict(X, operator=pde)
-print("Mean residual:", np.mean(np.absolute(f)))
-print("L2 relative error:", dde.metrics.l2_relative_error(y_true, y_pred))
-np.savetxt("test.dat", np.hstack((X, y_true, y_pred)))
-
 
