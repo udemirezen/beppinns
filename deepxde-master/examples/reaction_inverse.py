@@ -80,7 +80,7 @@ def main():
     variable = dde.callbacks.VariableValue(
         [kf, D], period=1000, filename="variables.dat"
     )
-    losshistory, train_state = model.train(epochs=80000, callbacks=[variable])
+    losshistory, train_state = model.train(epochs=8000, callbacks=[variable]) #epochs was 80000
     dde.saveplot(losshistory, train_state, issave=True, isplot=True)
 
 
