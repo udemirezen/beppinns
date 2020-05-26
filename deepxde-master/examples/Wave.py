@@ -8,7 +8,7 @@ from matplotlib import cm
 import tensorflow as tf
 from mpl_toolkits.mplot3d import Axes3D
 
-import deepxde as dde
+#import deepxde1 as dde
 
 def saveplot(losshistory, train_state, issave=True, isplot=True):
     if isplot:
@@ -128,18 +128,19 @@ def pde(x, y):
     return dy_tt - dy_xx
 
 geom = dde.geometry.Interval(-1, 1)
-timedomain = dde.geometry.TimeDomain(0, 7.49)
+timedomain = dde.geometry.TimeDomain(0, 2.49)
 geomtime = dde.geometry.GeometryXTime(geom, timedomain)
 
 bc = dde.DirichletBC(
     geomtime, lambda x: np.zeros((len(x), 1)), lambda _, on_boundary: on_boundary
 )
-ic = dde.IC(
+ic1 = dde.DirichletIC(
     geomtime, lambda x: -np.sin(np.pi * x[:, 0:1]), lambda _, on_initial: on_initial
 )
+ic2=dde.NeumannIC(geomtime, lambda x: np.zeros((len(x),1)), lambda _, on_initial: on_initial)
 
 data = dde.data.TimePDE(
-    geomtime, 1, pde, [bc, ic], num_domain=5080, num_boundary=320, num_initial=160
+    geomtime, 1, pde, [bc, ic1, ic2], num_domain=5080, num_boundary=160, num_initial=160
 )
 net = dde.maps.FNN([2] + [20] * 3 + [1], "tanh", "Glorot normal")
 model = dde.Model(data, net)

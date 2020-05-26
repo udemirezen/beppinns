@@ -10,7 +10,8 @@ from .boundary_conditions import NeumannBC
 from .boundary_conditions import OperatorBC
 from .boundary_conditions import PeriodicBC
 from .boundary_conditions import RobinBC
-from .initial_condition import IC
+from .initial_condition import DirichletIC
+from .initial_condition import NeumannIC
 from .model import Model
 from .postprocessing import saveplot
 from .utils import apply
@@ -27,7 +28,8 @@ __all__ = [
     "OperatorBC",
     "PeriodicBC",
     "RobinBC",
-    "IC",
+    "DirichletIC",
+    "NeumannIC",
     "Model",
     "saveplot",
     "apply",
