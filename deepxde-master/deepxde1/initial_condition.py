@@ -40,9 +40,11 @@ class NeumannIC(object):
         
     def normal_derivative(self, X, inputs, outputs, beg, end):
         outputs = outputs[:, self.component : self.component + 1]
-        dydx = tf.gradients(outputs, inputs)[0][beg:end]
-        n = np.array(list(map(self.geom.boundary_normal, X[beg:end])))
-        return tf.reduce_sum(dydx * n, axis=1, keepdims=True)
+        dydt = tf.gradients(outputs, inputs)[0][:,1:2]           #<== tried a lot of combinations, nothing seems to work
+#        n = np.array(list(map(self.geom.boundary_normal, X[beg:end])))
+#        print(n)
+#        return tf.reduce_sum(dydt * n, axis=1, keepdims=True)
+        return dydt
 
     def filter(self, X):
         X = np.array([x for x in X if self.on_initial(x, self.geom.on_initial(x))])
@@ -52,5 +54,5 @@ class NeumannIC(object):
         return self.filter(X)
 
     def error(self, X, inputs, outputs, beg, end):
-        return self.normal_derivative(X, inputs, outputs, beg, end) - self.func(
-            X[beg:end])
+        return 100*(self.normal_derivative(X, inputs, outputs, beg, end)[beg:end, self.component : self.component + 1] - self.func(
+            X[beg:end]))

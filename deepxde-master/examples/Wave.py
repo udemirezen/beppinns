@@ -137,7 +137,8 @@ bc = dde.DirichletBC(
 ic1 = dde.DirichletIC(
     geomtime, lambda x: -np.sin(np.pi * x[:, 0:1]), lambda _, on_initial: on_initial
 )
-ic2=dde.NeumannIC(geomtime, lambda x: np.zeros((len(x),1)), lambda _, on_initial: on_initial)
+ic2=dde.NeumannIC(geomtime, lambda x: np.zeros((len(x),1)), lambda _, on_initial: on_initial
+)
 
 data = dde.data.TimePDE(
     geomtime, 1, pde, [bc, ic1, ic2], num_domain=5080, num_boundary=160, num_initial=160
