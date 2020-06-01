@@ -40,7 +40,7 @@ class NeumannIC(object):
         
     def normal_derivative(self, X, inputs, outputs, beg, end):
         outputs = outputs[:, self.component : self.component + 1]
-        dydt = tf.gradients(outputs, inputs)[0][:,1:2]           #<== tried a lot of combinations, nothing seems to work
+        dydt = tf.gradients(outputs, inputs)[0][:,1:2]           #<== tried a lot of combinations, nothing seems to workj
 #        n = np.array(list(map(self.geom.boundary_normal, X[beg:end])))
 #        print(n)
 #        return tf.reduce_sum(dydt * n, axis=1, keepdims=True)
