@@ -30,6 +30,7 @@ class BC(object):
         outputs = outputs[:, self.component : self.component + 1]
         dydx = tf.gradients(outputs, inputs)[0][beg:end]
         n = np.array(list(map(self.geom.boundary_normal, X[beg:end])))
+        print(n)
         return tf.reduce_sum(dydx * n, axis=1, keepdims=True)
 
     def error(self, X, inputs, outputs, beg, end):

@@ -92,6 +92,13 @@ class Rectangle(Hypercube):
         self.perimeter = 2 * np.sum(self.xmax - self.xmin)
         self.area = np.prod(self.xmax - self.xmin)
 
+#    def boundary_normal(self, x):
+#        if np.isclose(x[0], self.l):
+#            return np.array([-1])
+#        if np.isclose(x[0], self.r):
+#            return np.array([1])
+#        return np.array([0])
+
     def uniform_boundary_points(self, n):
         nx, ny = np.ceil(n / self.perimeter * (self.xmax - self.xmin)).astype(int)
         xbot = np.hstack(
