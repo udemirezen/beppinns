@@ -77,6 +77,50 @@ class Hypercube(Geometry):
             y[component] -= self.xmax[component] - self.xmin[component]
         return y
 
+    def random_boundary_points(self, n, random="pseudo"):
+        
+        print('CAUTION: ONLY IMPLEMENTED FOR 4D GEOMETRY!!')
+        
+        x_corner = np.vstack(
+            (
+                self.xmin,
+                [self.xmin[0], self.xmax[1], self.xmin[2], self.xmin[3]],
+                [self.xmax[0], self.xmax[1], self.xmin[2], self.xmin[3]],
+                [self.xmax[0], self.xmin[1], self.xmin[2], self.xmin[3]],
+                [self.xmin[0], self.xmax[1], self.xmin[2], self.xmax[3]],
+                [self.xmax[0], self.xmax[1], self.xmin[2], self.xmax[3]],
+                [self.xmax[0], self.xmin[1], self.xmin[2], self.xmax[3]],
+                [self.xmin[0], self.xmin[1], self.xmin[2], self.xmax[3]],
+                self.xmax,
+                [self.xmin[0], self.xmax[1], self.xmax[2], self.xmin[3]],
+                [self.xmin[0], self.xmin[1], self.xmax[2], self.xmin[3]],
+                [self.xmax[0], self.xmin[1], self.xmax[2], self.xmin[3]],
+                [self.xmin[0], self.xmax[1], self.xmax[2], self.xmax[3]],
+                [self.xmin[0], self.xmin[1], self.xmax[2], self.xmax[3]],
+                [self.xmax[0], self.xmin[1], self.xmax[2], self.xmax[3]],
+                [self.xmax[0], self.xmax[1], self.xmax[2], self.xmin[3]],
+            )
+        )
+        n -= 16
+        if n <= 0:
+            return x_corner
+
+        pts = [x_corner]
+        density = n / self.area
+        rect = Rectangle(self.xmin[:-1], self.xmax[:-1])
+        for z in [self.xmin[-1], self.xmax[-1]]:
+            u = rect.random_points(int(np.ceil(density * rect.area)), random=random)
+            pts.append(np.hstack((u, np.full((len(u), 1), z))))
+        rect = Rectangle(self.xmin[::2], self.xmax[::2])
+        for y in [self.xmin[1], self.xmax[1]]:
+            u = rect.random_points(int(np.ceil(density * rect.area)), random=random)
+            pts.append(np.hstack((u[:, 0:1], np.full((len(u), 1), y), u[:, 1:])))
+        rect = Rectangle(self.xmin[1:], self.xmax[1:])
+        for x in [self.xmin[0], self.xmax[0]]:
+            u = rect.random_points(int(np.ceil(density * rect.area)), random=random)
+            pts.append(np.hstack((np.full((len(u), 1), x), u)))
+        return np.vstack(pts)
+
 
 class Hypersphere(Geometry):
     def __init__(self, center, radius):
