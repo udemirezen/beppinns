@@ -5,7 +5,7 @@ from __future__ import print_function
 import numpy as np
 import tensorflow as tf
 
-#import deepxde as dde
+import deepxde as dde
 
 
 def main():
@@ -75,20 +75,34 @@ def main():
     
     def boundary(x, on_boundary):
         return on_boundary
+    
+    def initial(x, on_initial):
+        return on_initial
 
-    geom = dde.geometry.Hypercube([0,0,0,0], [10,10,10,10])
-    bc1 = dde.DirichletBC(geom, lambda x: np.zeros((len(x),1)), boundary, component=0)
-    bc2 = dde.DirichletBC(geom, lambda x: np.zeros((len(x),1)), boundary, component=1)
-    bc3 = dde.DirichletBC(geom, lambda x: np.zeros((len(x),1)), boundary, component=2)
-    bc4 = dde.DirichletBC(geom, lambda x: np.zeros((len(x),1)), boundary, component=3)
-    bc5 = dde.DirichletBC(geom, lambda x: np.zeros((len(x),1)), boundary, component=4)
-    bc6 = dde.DirichletBC(geom, lambda x: np.zeros((len(x),1)), boundary, component=5)
-    bc7 = dde.DirichletBC(geom, lambda x: np.zeros((len(x),1)), boundary, component=6)
-    bc8 = dde.DirichletBC(geom, lambda x: np.zeros((len(x),1)), boundary, component=7)
+    geom = dde.geometry.Cuboid([0,0,0], [10,10,10])
+    timedomain = dde.geometry.TimeDomain(0, 0.99)
+    geomtime = dde.geometry.GeometryXTime(geom, timedomain)
+    bc1 = dde.DirichletBC(geomtime, lambda x: np.zeros((len(x),1)), boundary, component=0)
+    bc2 = dde.DirichletBC(geomtime, lambda x: np.zeros((len(x),1)), boundary, component=1)
+    bc3 = dde.DirichletBC(geomtime, lambda x: np.zeros((len(x),1)), boundary, component=2)
+    bc4 = dde.DirichletBC(geomtime, lambda x: np.zeros((len(x),1)), boundary, component=3)
+    bc5 = dde.DirichletBC(geomtime, lambda x: np.zeros((len(x),1)), boundary, component=4)
+    bc6 = dde.DirichletBC(geomtime, lambda x: np.zeros((len(x),1)), boundary, component=5)
+    bc7 = dde.DirichletBC(geomtime, lambda x: np.zeros((len(x),1)), boundary, component=6)
+    bc8 = dde.DirichletBC(geomtime, lambda x: np.zeros((len(x),1)), boundary, component=7)
+    
+    ic1 = dde.IC(geomtime, lambda x: np.zeros((len(x),1)), boundary, component=0)
+    ic2 = dde.IC(geomtime, lambda x: np.zeros((len(x),1)), boundary, component=1)
+    ic3 = dde.IC(geomtime, lambda x: np.zeros((len(x),1)), boundary, component=2)
+    ic4 = dde.IC(geomtime, lambda x: np.zeros((len(x),1)), boundary, component=3)
+    ic5 = dde.IC(geomtime, lambda x: np.zeros((len(x),1)), boundary, component=4)
+    ic6 = dde.IC(geomtime, lambda x: np.zeros((len(x),1)), boundary, component=5)
+    ic7 = dde.IC(geomtime, lambda x: np.zeros((len(x),1)), boundary, component=6)
+    ic8 = dde.IC(geomtime, lambda x: np.zeros((len(x),1)), boundary, component=7)
 
 
 
-    data = dde.data.PDE(geom, 8, mhd, [bc1, bc2, bc3, bc4, bc5, bc6, bc7, bc8], 600, 80, num_test=100)
+    data = dde.data.TimePDE(geomtime, 8, mhd, [bc1, bc2, bc3, bc4, bc5, bc6, bc7, bc8, ic1, ic2, ic3, ic4, ic5, ic6, ic7, ic8])#, num_domain=160, num_boundary=160, num_initial=160)
 
     layer_size = [4] + [50] * 3 + [8]
     activation = "tanh"

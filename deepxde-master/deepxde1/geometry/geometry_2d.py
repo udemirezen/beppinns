@@ -6,8 +6,10 @@ import numpy as np
 from SALib.sample import sobol_sequence
 from scipy import spatial
 
+import itertools
+
 from .geometry import Geometry
-from .geometry_nd import Hypercube
+#from .geometry_nd import Hypercube
 
 
 class Disk(Geometry):
@@ -80,7 +82,7 @@ class Disk(Geometry):
         return pts
 
 
-class Rectangle(Hypercube):
+class Rectangle(Geometry):
     """
     Args:
         xmin: Coordinate of bottom left corner.
@@ -88,16 +90,72 @@ class Rectangle(Hypercube):
     """
 
     def __init__(self, xmin, xmax):
-        super(Rectangle, self).__init__(xmin, xmax)
+        if len(xmin) != len(xmax):
+            raise ValueError("Dimensions of xmin and xmax do not match.")
+        if np.any(np.array(xmin) >= np.array(xmax)):
+            raise ValueError("xmin >= xmax")
+
+        self.xmin, self.xmax = np.array(xmin), np.array(xmax)
+        super(Rectangle, self).__init__(
+            len(xmin), (self.xmin, self.xmax), np.linalg.norm(self.xmax - self.xmin)
+        )
         self.perimeter = 2 * np.sum(self.xmax - self.xmin)
         self.area = np.prod(self.xmax - self.xmin)
 
-#    def boundary_normal(self, x):
-#        if np.isclose(x[0], self.l):
-#            return np.array([-1])
-#        if np.isclose(x[0], self.r):
-#            return np.array([1])
-#        return np.array([0])
+#from here
+    def inside(self, x):
+        return np.all(x >= self.xmin) and np.all(x <= self.xmax)
+
+    def on_boundary(self, x):
+        return self.inside(x) and (
+            np.any(np.isclose(x, self.xmin)) or np.any(np.isclose(x, self.xmax))
+        )
+
+    def boundary_normal(self, x):
+        n = np.zeros(self.dim)
+        for i, xi in enumerate(x):
+            if np.isclose(xi, self.xmin[i]):
+                n[i] = -1
+                break
+            if np.isclose(xi, self.xmax[i]):
+                n[i] = 1
+                break
+        return n
+
+    def uniform_points(self, n, boundary=True):
+        n1 = int(np.ceil(n ** (1 / self.dim)))
+        xi = []
+        for i in range(self.dim):
+            if boundary:
+                xi.append(np.linspace(self.xmin[i], self.xmax[i], num=n1))
+            else:
+                xi.append(
+                    np.linspace(self.xmin[i], self.xmax[i], num=n1 + 1, endpoint=False)[
+                        1:
+                    ]
+                )
+        x = np.array(list(itertools.product(*xi)))
+        if n != len(x):
+            print(
+                "Warning: {} points required, but {} points sampled.".format(n, len(x))
+            )
+        return x
+
+    def random_points(self, n, random="pseudo"):
+        if random == "pseudo":
+            x = np.random.rand(n, self.dim)
+        elif random == "sobol":
+            x = sobol_sequence.sample(n + 1, self.dim)[1:]
+        return (self.xmax - self.xmin) * x + self.xmin
+
+    def periodic_point(self, x, component):
+        y = np.copy(x)
+        if np.isclose(y[component], self.xmin[component]):
+            y[component] += self.xmax[component] - self.xmin[component]
+        elif np.isclose(y[component], self.xmax[component]):
+            y[component] -= self.xmax[component] - self.xmin[component]
+        return y
+#to here is a copy from geometry_nd.py
 
     def uniform_boundary_points(self, n):
         nx, ny = np.ceil(n / self.perimeter * (self.xmax - self.xmin)).astype(int)
