@@ -80,7 +80,8 @@ class Hypercube(Geometry):
 
     def random_boundary_points(self, n, random="pseudo"):
         
-        print('CAUTION: ONLY IMPLEMENTED FOR 4D GEOMETRY!!')
+        if len(self.xmin) != 4:
+            print('CAUTION: ONLY IMPLEMENTED FOR 4D GEOMETRY!!')
         
         x_corner = np.vstack(
             (
