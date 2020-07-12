@@ -139,7 +139,7 @@ bc = dde.DirichletBC(geomtime, lambda x: np.zeros((len(x), 1)), space_boundary)
 ic1 = dde.DirichletBC(geomtime, lambda x: -np.sin(np.pi * x[:, 0:1]), time_boundary)
 ic2=dde.NeumannBC(geomtime, lambda x: np.zeros((len(x),1)), time_boundary)
 
-data = dde.data.PDE(geomtime, 1, pde, [bc, ic1, ic2], num_domain=5080, num_boundary=640)
+data = dde.data.PDE(geomtime, 1, pde, [bc, ic1, ic2], num_domain=508, num_boundary=64)
 net = dde.maps.FNN([2] + [20] * 3 + [1], "tanh", "Glorot normal")
 model = dde.Model(data, net)
 
