@@ -28,20 +28,20 @@ def mhd(x, y):
     x5 = By*vx - Bx*vy
     x6 = Bz*vx - Bx*vz
     x7 = (E+pstar)*vx - Bx*(Bx*vx+By*vy+Bz*vz)
-    dt1 = tf.gradients(t1, x)[0][1:2]
-    dt2 = tf.gradients(t2, x)[0][1:2]
-    dt3 = tf.gradients(t3, x)[0][1:2]
-    dt4 = tf.gradients(t4, x)[0][1:2]
-    dt5 = tf.gradients(t5, x)[0][1:2]
-    dt6 = tf.gradients(t6, x)[0][1:2]
-    dt7 = tf.gradients(t7, x)[0][1:2]
-    dx1 = tf.gradients(x1, x)[0][0:1]
-    dx2 = tf.gradients(x2, x)[0][0:1]
-    dx3 = tf.gradients(x3, x)[0][0:1]
-    dx4 = tf.gradients(x4, x)[0][0:1]
-    dx5 = tf.gradients(x5, x)[0][0:1]
-    dx6 = tf.gradients(x6, x)[0][0:1]
-    dx7 = tf.gradients(x7, x)[0][0:1]
+    dt1 = tf.gradients(t1, x)[0][:,1:2]
+    dt2 = tf.gradients(t2, x)[0][:,1:2]
+    dt3 = tf.gradients(t3, x)[0][:,1:2]
+    dt4 = tf.gradients(t4, x)[0][:,1:2]
+    dt5 = tf.gradients(t5, x)[0][:,1:2]
+    dt6 = tf.gradients(t6, x)[0][:,1:2]
+    dt7 = tf.gradients(t7, x)[0][:,1:2]
+    dx1 = tf.gradients(x1, x)[0][:,0:1]
+    dx2 = tf.gradients(x2, x)[0][:,0:1]
+    dx3 = tf.gradients(x3, x)[0][:,0:1]
+    dx4 = tf.gradients(x4, x)[0][:,0:1]
+    dx5 = tf.gradients(x5, x)[0][:,0:1]
+    dx6 = tf.gradients(x6, x)[0][:,0:1]
+    dx7 = tf.gradients(x7, x)[0][:,0:1]
     
     return [dt1 + dx1,
             dt2 + dx2,
@@ -136,12 +136,13 @@ while err > 0.005:
     )
     model.compile("L-BFGS-B")
     losshistory, train_state = model.train()
+    
 dde.saveplot(losshistory, train_state, issave=True, isplot=True)
 
-X, y_true = gen_testdata()
-y_pred = model.predict(X)
-print("L2 relative error:", dde.metrics.l2_relative_error(y_true, y_pred))
-np.savetxt("test.dat", np.hstack((X, y_true, y_pred)))
+#X, y_true = gen_testdata()
+#y_pred = model.predict(X)
+#print("L2 relative error:", dde.metrics.l2_relative_error(y_true, y_pred))
+#np.savetxt("test.dat", np.hstack((X, y_true, y_pred)))
 
 X_train, y_train, X_test, y_test, best_y, best_ystd = train_state.packed_data()
 import matplotlib.pyplot as plt

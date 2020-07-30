@@ -134,27 +134,27 @@ geomtime = dde.geometry.GeometryXTime(geom, timedomain)
 bc = dde.DirichletBC(
     geomtime, lambda x: np.zeros((len(x), 1)), lambda _, on_boundary: on_boundary
 )
-ic = dde.DirichletIC(
+ic = dde.IC(
     geomtime, lambda x: -np.sin(np.pi * x[:, 0:1]), lambda _, on_initial: on_initial
 )
 
 data = dde.data.TimePDE(
-    geomtime, 1, pde, [bc, ic], num_domain=2540, num_boundary=80, num_initial=160
+    geomtime, 1, pde, [bc, ic], num_domain=1528, num_boundary=120, num_initial=20
 )
 net = dde.maps.FNN([2] + [20] * 3 + [1], "tanh", "Glorot normal")
 model = dde.Model(data, net)
 
 model.compile("adam", lr=1e-3)
-model.train(epochs=1500) #was 15000 epochs
+model.train(epochs=12000) #was 15000 epochs
 model.compile("L-BFGS-B")
 losshistory, train_state = model.train()
 saveplot(losshistory, train_state, issave=True, isplot=True)
 
-X, y_true = gen_testdata()
-y_pred = model.predict(X)
-f = model.predict(X, operator=pde)
-print("Mean residual:", np.mean(np.absolute(f)))
-print("L2 relative error:", dde.metrics.l2_relative_error(y_true, y_pred))
-np.savetxt("test.dat", np.hstack((X, y_true, y_pred)))
+#X, y_true = gen_testdata()
+#y_pred = model.predict(X)
+#f = model.predict(X, operator=pde)
+#print("Mean residual:", np.mean(np.absolute(f)))
+#print("L2 relative error:", dde.metrics.l2_relative_error(y_true, y_pred))
+#np.savetxt("test.dat", np.hstack((X, y_true, y_pred)))
 
 
