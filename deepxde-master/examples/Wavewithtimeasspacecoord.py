@@ -32,12 +32,12 @@ def plot_loss_history(losshistory):
     plt.figure()
     plt.semilogy(losshistory.steps, loss_train, label="Train loss")
     plt.semilogy(losshistory.steps, loss_test, label="Test loss")
-    for i in range(len(losshistory.metrics_test[0])):
-        plt.semilogy(
-            losshistory.steps,
-            np.array(losshistory.metrics_test)[:, i],
-            label="Test metric",
-        )
+#    for i in range(len(losshistory.metrics_test[0])):
+#        plt.semilogy(
+#            losshistory.steps,
+#            np.array(losshistory.metrics_test)[:, i],
+#            label="Test metric",
+#        )
     plt.xlabel("# Steps")
     plt.legend()
 
@@ -73,6 +73,9 @@ def plot_best_state(train_state):
     ax = Axes3D(fig)
     surf = ax.plot_trisurf(X, T, best_y[:,0], cmap=cm.jet, linewidth=0.1)
     fig.colorbar(surf, shrink=0.5, aspect=5)
+    ax.set_xlabel('x')
+    ax.set_ylabel('t')
+    ax.set_zlabel('z')
     plt.show()
 
     # Residual plot
@@ -144,9 +147,9 @@ net = dde.maps.FNN([2] + [20] * 3 + [1], "tanh", "Glorot normal")
 model = dde.Model(data, net)
 
 model.compile("adam", lr=1e-3)
-model.train(epochs=5000) #was 15000 epochs
+model.train(epochs=20000) #was 15000 epochs
 model.compile("L-BFGS-B")
-losshistory, train_state = model.train()
+losshistory, train_state = model.train(epochs=5000)
 saveplot(losshistory, train_state, issave=True, isplot=True)
 
 X, y_true = gen_testdata()

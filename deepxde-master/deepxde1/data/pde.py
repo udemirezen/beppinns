@@ -101,13 +101,13 @@ class PDE(Data):
             if self.train_distribution == "uniform":
                 X = self.geom.uniform_points(self.num_domain, boundary=False)
             else:
-                X = self.geom.random_points(self.num_domain, random="sobol")
+                X = self.geom.random_points(self.num_domain)#, random="sobol")
         if self.num_boundary > 0:
             if self.train_distribution == "uniform":
                 tmp = self.geom.uniform_boundary_points(self.num_boundary)
             else:
                 tmp = self.geom.random_boundary_points(
-                    self.num_boundary, random="sobol"
+                    self.num_boundary#, random="sobol"
                 )
             X = np.vstack((tmp, X))
         if self.anchors is not None:

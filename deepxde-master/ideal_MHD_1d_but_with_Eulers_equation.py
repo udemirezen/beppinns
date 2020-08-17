@@ -5,7 +5,7 @@ from __future__ import print_function
 import numpy as np
 import tensorflow as tf
 
-import deepxde as dde
+#import deepxde as dde
 
 
 
@@ -30,16 +30,16 @@ def mhd(x, y):
             ]
 
 def boundary_space_left(x, on_boundary):
-    return on_boundary and np.isclose(x[0],-1) and not np.isclose(x[1], 0)
+    return on_boundary and np.isclose(x[0],0) and not np.isclose(x[1], 0)
 
 def boundary_space_right(x, on_boundary):
     return on_boundary and np.isclose(x[0],1) and not np.isclose(x[1], 0)
 
 def boundary_time_left(x, on_boundary):
-    return on_boundary and np.isclose(x[1], 0) and not (np.isclose(x[0], -1) or np.isclose(x[0], 1)) and x[0] <= 0.5
+    return on_boundary and np.isclose(x[1], 0) and not (np.isclose(x[0], 0) or np.isclose(x[0], 1)) and x[0] <= 0.5
 
 def boundary_time_right(x, on_boundary):
-    return on_boundary and np.isclose(x[1], 0) and not (np.isclose(x[0], -1) or np.isclose(x[0], 1)) and x[0] > 0.5
+    return on_boundary and np.isclose(x[1], 0) and not (np.isclose(x[0], 0) or np.isclose(x[0], 1)) and x[0] > 0.5
 
 geom = dde.geometry.Rectangle([0,0], [1,1.99])
 bc1l = dde.DirichletBC(geom, lambda x: 1.4*np.ones((len(x),1)), boundary_space_left, component=0)
@@ -70,7 +70,7 @@ net = dde.maps.FNN(layer_size, activation, initializer)
 
 model = dde.Model(data, net)
 model.compile("adam", lr=0.001, metrics=["l2 relative error"])
-losshistory, train_state = model.train(epochs=12000)
+losshistory, train_state = model.train(epochs=20000)
 
 dde.saveplot(losshistory, train_state, issave=True, isplot=True)
 

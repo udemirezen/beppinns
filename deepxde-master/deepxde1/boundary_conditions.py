@@ -4,6 +4,7 @@ from __future__ import print_function
 
 import numpy as np
 import tensorflow as tf
+from scipy import stats
 
 
 class BC(object):
@@ -54,6 +55,42 @@ class DirichletBC(BC):
                 "DirichletBC should output 1D values. Use argument 'component' for different components."
             )
         return outputs[beg:end, self.component : self.component + 1] - values
+    
+
+class ConstantWeightDirichletBC(BC):
+    """Dirichlet boundary conditions: y(x) = func(x). The error output is multiplied by 1000.
+    """
+
+    def __init__(self, geom, func, on_boundary, component=0):
+        super(ConstantWeightDirichletBC, self).__init__(geom, on_boundary, component)
+        self.func = func
+
+    def error(self, X, inputs, outputs, beg, end):
+        values = self.func(X[beg:end])
+        if values.shape[1] != 1:
+            raise RuntimeError(
+                "ConstantWeightDirichletBC should output 1D values. Use argument 'component' for different components."
+            )
+        return 50*(outputs[beg:end, self.component : self.component + 1] - values)
+    
+    
+class NormalDisWeightDirichletBC(BC):
+    """Dirichlet boundary conditions: y(x) = func(x). The error output is 
+       weighted with a normal distribution according to its x value.
+    """
+    
+    def __init__(self, geom, func, on_boundary, component=0):
+        super(NormalDisWeightDirichletBC, self).__init__(geom, on_boundary, component)
+        self.func = func
+
+    def error(self, X, inputs, outputs, beg, end):
+        values = self.func(X[beg:end])
+        weight = 50*stats.norm.pdf(X[beg:end], 0.5, 0.1)+1
+        if values.shape[1] != 1:
+            raise RuntimeError(
+                "NormalDisWeightDirichletBC should output 1D values. Use argument 'component for different components."
+            )
+        return weight*(outputs[beg:end, self.component : self.component + 1] - values)
 
 
 class NeumannBC(BC):

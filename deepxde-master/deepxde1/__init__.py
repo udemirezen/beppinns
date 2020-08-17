@@ -6,6 +6,8 @@ from . import data
 from . import geometry
 from . import maps
 from .boundary_conditions import DirichletBC
+from .boundary_conditions import ConstantWeightDirichletBC
+from .boundary_conditions import NormalDisWeightDirichletBC
 from .boundary_conditions import NeumannBC
 from .boundary_conditions import OperatorBC
 from .boundary_conditions import PeriodicBC
@@ -24,6 +26,8 @@ __all__ = [
     "geometry",
     "maps",
     "DirichletBC",
+    "ConstantWeightDirichletBC",
+    "NormalDisWeightDirichletBC",
     "NeumannBC",
     "OperatorBC",
     "PeriodicBC",

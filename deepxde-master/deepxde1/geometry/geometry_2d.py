@@ -229,6 +229,167 @@ class Rectangle(Geometry):
             else:
                 x.append([self.xmin[0], self.xmax[1] - l + l3])
         return np.vstack((x_corner, x))
+    
+    
+class RectangleClusteredEuler(Geometry):
+    """
+    Args:
+        xmin: Coordinate of bottom left corner.
+        xmax: Coordinate of top right corner.
+    """
+
+    def __init__(self, xmin, xmax):
+        if len(xmin) != len(xmax):
+            raise ValueError("Dimensions of xmin and xmax do not match.")
+        if np.any(np.array(xmin) >= np.array(xmax)):
+            raise ValueError("xmin >= xmax")
+
+        self.xmin, self.xmax = np.array(xmin), np.array(xmax)
+        super(RectangleClusteredEuler, self).__init__(
+            len(xmin), (self.xmin, self.xmax), np.linalg.norm(self.xmax - self.xmin)
+        )
+        self.perimeter = 2 * np.sum(self.xmax - self.xmin)
+        self.area = np.prod(self.xmax - self.xmin)
+
+#from here
+    def inside(self, x):
+        return np.all(x >= self.xmin) and np.all(x <= self.xmax)
+
+    def on_boundary(self, x):
+        return self.inside(x) and (
+            np.any(np.isclose(x, self.xmin)) or np.any(np.isclose(x, self.xmax))
+        )
+
+    def boundary_normal(self, x):
+        n = np.zeros(self.dim)
+        for i, xi in enumerate(x):
+            if np.isclose(xi, self.xmin[i]):
+                n[i] = -1
+                break
+            if np.isclose(xi, self.xmax[i]):
+                n[i] = 1
+                break
+        return n
+
+    def uniform_points(self, n, boundary=True):
+        n1 = int(np.ceil(n ** (1 / self.dim)))
+        xi = []
+        for i in range(self.dim):
+            if boundary:
+                xi.append(np.linspace(self.xmin[i], self.xmax[i], num=n1))
+            else:
+                xi.append(
+                    np.linspace(self.xmin[i], self.xmax[i], num=n1 + 1, endpoint=False)[
+                        1:
+                    ]
+                )
+        x = np.array(list(itertools.product(*xi)))
+        if n != len(x):
+            print(
+                "Warning: {} points required, but {} points sampled.".format(n, len(x))
+            )
+        return x
+
+    def random_points(self, n, random="pseudo"):
+        
+        x1 = ([0.2,1.99])*np.random.rand(900,2)+[0.4,0]
+        for i in range(900):
+            x1[i,0]=x1[i,0]+0.1*x1[i,1]
+        
+        x2 = ([1.0,1.99])*np.random.rand(100,2)
+        
+        x = np.vstack((x1,x2))
+        return x
+
+    def periodic_point(self, x, component):
+        y = np.copy(x)
+        if np.isclose(y[component], self.xmin[component]):
+            y[component] += self.xmax[component] - self.xmin[component]
+        elif np.isclose(y[component], self.xmax[component]):
+            y[component] -= self.xmax[component] - self.xmin[component]
+        return y
+#to here is a copy from geometry_nd.py
+
+    def uniform_boundary_points(self, n):
+        nx, ny = np.ceil(n / self.perimeter * (self.xmax - self.xmin)).astype(int)
+        xbot = np.hstack(
+            (
+                np.linspace(self.xmin[0], self.xmax[0], num=nx, endpoint=False)[
+                    :, None
+                ],
+                np.full([nx, 1], self.xmin[1]),
+            )
+        )
+        yrig = np.hstack(
+            (
+                np.full([ny, 1], self.xmax[0]),
+                np.linspace(self.xmin[1], self.xmax[1], num=ny, endpoint=False)[
+                    :, None
+                ],
+            )
+        )
+        xtop = np.hstack(
+            (
+                np.linspace(self.xmin[0], self.xmax[0], num=nx + 1)[1:, None],
+                np.full([nx, 1], self.xmax[1]),
+            )
+        )
+        ylef = np.hstack(
+            (
+                np.full([ny, 1], self.xmin[0]),
+                np.linspace(self.xmin[1], self.xmax[1], num=ny + 1)[1:, None],
+            )
+        )
+        x = np.vstack((xbot, yrig, xtop, ylef))
+        if n != len(x):
+            print(
+                "Warning: {} points required, but {} points sampled.".format(n, len(x))
+            )
+        return x
+
+    def random_boundary_points(self, n, random="pseudo"):
+        n=500
+        x_corner = np.vstack(
+            (
+                self.xmin,
+                [self.xmax[0], self.xmin[1]],
+                self.xmax,
+                [self.xmin[0], self.xmax[1]],
+            )
+        )
+        n -= 4
+        if n <= 0:
+            return x_corner
+
+        l1 = self.xmax[0] - self.xmin[0]
+        l2 = l1 + self.xmax[1] - self.xmin[1]
+        l3 = l2 + l1
+        if random == "sobol":
+            u = np.ravel(sobol_sequence.sample(n + 4, 1))[2:]
+            u = u[np.logical_not(np.isclose(u, l1 / self.perimeter))]
+            u = u[np.logical_not(np.isclose(u, l3 / self.perimeter))]
+            u = u[:n]
+        else:
+            u = np.random.rand(n)
+        u *= self.perimeter
+        x = []
+        for l in u:
+            if l < l1:
+                x.append([self.xmin[0] + l, self.xmin[1]])
+            elif l < l2:
+                x.append([self.xmax[0], self.xmin[1] + l - l1])
+            elif l < l3:
+                x.append([self.xmax[0] - l + l2, self.xmax[1]])
+            else:
+                x.append([self.xmin[0], self.xmax[1] - l + l3])
+        x1 = np.vstack((x_corner, x))
+        
+        x2=[]
+        for i in range(100):
+            x2.append([0.2*np.random.rand()+0.4,0])
+        x2=np.array(x2)
+        x=np.vstack((x1,x2))
+        return x
 
 
 class Triangle(Geometry):

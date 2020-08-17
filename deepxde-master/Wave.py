@@ -141,13 +141,13 @@ ic2=dde.NeumannIC(geomtime, lambda x: np.zeros((len(x),1)), lambda _, on_initial
 )
 
 data = dde.data.TimePDE(
-    geomtime, 1, pde, [bc, ic1, ic2], num_domain=5080, num_boundary=160, num_initial=160
+    geomtime, 1, pde, [bc, ic1, ic2], num_domain=1000, num_boundary=160, num_initial=160
 )
 net = dde.maps.FNN([2] + [20] * 3 + [1], "tanh", "Glorot normal")
 model = dde.Model(data, net)
 
 model.compile("adam", lr=1e-3)
-model.train(epochs=5000) #was 15000 epochs
+model.train(epochs=20000) #was 15000 epochs
 model.compile("L-BFGS-B")
 losshistory, train_state = model.train()
 saveplot(losshistory, train_state, issave=True, isplot=True)
