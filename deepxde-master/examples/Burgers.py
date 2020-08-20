@@ -8,7 +8,7 @@ from matplotlib import cm
 import tensorflow as tf
 from mpl_toolkits.mplot3d import Axes3D
 
-#import deepxde1 as dde
+import deepxde as dde
 
 def saveplot(losshistory, train_state, issave=True, isplot=True):
     if isplot:

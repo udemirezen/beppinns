@@ -5,7 +5,7 @@ from __future__ import print_function
 import numpy as np
 import tensorflow as tf
 
-#import deepxde as dde
+import deepxde1 as dde
 
 
 
@@ -61,7 +61,7 @@ ic3r = dde.ConstantWeightDirichletBC(geom, lambda x: 2.505*np.ones((len(x),1)), 
 
 bic = [bc1l, bc2l, bc3l, bc1r, bc2r, bc3r, ic1l, ic2l, ic3l, ic1r, ic2r, ic3r]
 
-data = dde.data.PDE(geom, 3, mhd, bic, 1008, 640)
+data = dde.data.PDE(geom, 3, mhd, bic, 1000, 600)
 
 layer_size = [2] + [50] * 3 + [3]
 activation = "tanh"
@@ -70,8 +70,9 @@ net = dde.maps.FNN(layer_size, activation, initializer)
 
 model = dde.Model(data, net)
 model.compile("adam", lr=0.001, metrics=["l2 relative error"])
-losshistory, train_state = model.train(epochs=20000)
-
+model.train(epochs=20000)
+model.compile("L-BFGS-B")
+losshistory, train_state = model.train(epochs=5000)
 dde.saveplot(losshistory, train_state, issave=True, isplot=True)
 
 X_train, y_train, X_test, y_test, best_y, best_ystd = train_state.packed_data()
@@ -82,4 +83,7 @@ ax = Axes3D(fig)
 from matplotlib import cm
 surf = ax.plot_trisurf(X_test[:,0], X_test[:,1], best_y[:,0], cmap=cm.jet, linewidth=0.1)
 fig.colorbar(surf, shrink=0.5, aspect=5)
+ax.set_xlabel('x')
+ax.set_ylabel('t')
+ax.set_zlabel('z')
 plt.show()

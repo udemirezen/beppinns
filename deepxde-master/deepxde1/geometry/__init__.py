@@ -8,6 +8,7 @@ from .geometry_2d import Disk
 from .geometry_2d import Polygon
 from .geometry_2d import Rectangle
 from .geometry_2d import RectangleClusteredEuler
+from .geometry_2d import RectangleClusteredMHD
 from .geometry_2d import Triangle
 from .geometry_3d import Cuboid
 #from .geometry_3d import Sphere
@@ -26,6 +27,7 @@ __all__ = [
     "Polygon",
     "Rectangle",
     "RectangleClusteredEuler",
+    "RectangleClusteredMHD",
     "Triangle",
     "Cuboid",
 #    "Sphere",

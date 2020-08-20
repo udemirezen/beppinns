@@ -44,7 +44,7 @@ ic1r = dde.DirichletBC(geom, lambda x: -np.sin(np.pi * x[:, 0:1]), boundary_time
 
 bic = [bc1l, bc1r, ic1l, ic1r]
 
-data = dde.data.PDE(geom, 1, mhd, bic, 1508, 164)
+data = dde.data.PDE(geom, 1, mhd, bic, 1000, 600)
 
 layer_size = [2] + [50] * 3 + [1]
 activation = "tanh"
@@ -52,9 +52,11 @@ initializer = "Glorot uniform"
 net = dde.maps.FNN(layer_size, activation, initializer)
 
 model = dde.Model(data, net)
-model.compile("adam", lr=0.001, metrics=["l2 relative error"])
-losshistory, train_state = model.train(epochs=12000)
 
+model.compile("adam", lr=0.001, metrics=["l2 relative error"])
+model.train(epochs=20000)
+model.compile("L-BFGS-B")
+losshistory, train_state = model.train(epochs=5000)
 dde.saveplot(losshistory, train_state, issave=True, isplot=True)
 
 X_train, y_train, X_test, y_test, best_y, best_ystd = train_state.packed_data()
@@ -65,4 +67,7 @@ ax = Axes3D(fig)
 from matplotlib import cm
 surf = ax.plot_trisurf(X_test[:,0], X_test[:,1], best_y[:,0], cmap=cm.jet, linewidth=0.1)
 fig.colorbar(surf, shrink=0.5, aspect=5)
+ax.set_xlabel('x')
+ax.set_ylabel('t')
+ax.set_zlabel('z')
 plt.show()

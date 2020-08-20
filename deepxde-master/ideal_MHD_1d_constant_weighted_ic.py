@@ -5,7 +5,7 @@ from __future__ import print_function
 import numpy as np
 import tensorflow as tf
 
-#import deepxde as dde
+import deepxde1 as dde
 
 
 
@@ -96,7 +96,7 @@ ic7r = dde.ConstantWeightDirichletBC(geom, lambda x: 0.1*np.ones((len(x),1)), bo
 
 bic = [bc1l, bc2l, bc3l, bc4l, bc5l, bc6l, bc7l, bc1r, bc2r, bc3r, bc4r, bc5r, bc6r, bc7r, ic1l, ic2l, ic3l, ic4l, ic5l, ic6l, ic7l, ic1r, ic2r, ic3r, ic4r, ic5r, ic6r, ic7r]
 
-data = dde.data.PDE(geom, 7, mhd, bic, 5080, 640)
+data = dde.data.PDE(geom, 7, mhd, bic, 1000, 600)
 
 layer_size = [2] + [50] * 3 + [7]
 activation = "tanh"
@@ -105,16 +105,27 @@ net = dde.maps.FNN(layer_size, activation, initializer)
 
 model = dde.Model(data, net)
 model.compile("adam", lr=0.001, metrics=["l2 relative error"])
-losshistory, train_state = model.train(epochs=12000)
-
+model.train(epochs=20000)
+model.compile("L-BFGS-B")
+losshistory, train_state = model.train(epochs=5000)
 dde.saveplot(losshistory, train_state, issave=True, isplot=True)
 
-X_train, y_train, X_test, y_test, best_y, best_ystd = train_state.packed_data()
-import matplotlib.pyplot as plt
-fig = plt.figure()
-from mpl_toolkits.mplot3d import Axes3D
-ax = Axes3D(fig)
-from matplotlib import cm
-surf = ax.plot_trisurf(X_test[:,0], X_test[:,1], best_y[:,0], cmap=cm.jet, linewidth=0.1)
-fig.colorbar(surf, shrink=0.5, aspect=5)
-plt.show()
+for i in [0,1,2,4,6]:
+    X_train, y_train, X_test, y_test, best_y, best_ystd = train_state.packed_data()
+    import matplotlib.pyplot as plt
+    fig = plt.figure()
+    from mpl_toolkits.mplot3d import Axes3D
+    ax = Axes3D(fig)
+    from matplotlib import cm
+    surf = ax.plot_trisurf(X_test[:,0], X_test[:,1], best_y[:,i], cmap=cm.jet, linewidth=0.1)
+    fig.colorbar(surf, shrink=0.5, aspect=5)
+    ax.set_xlabel('x')
+    ax.set_ylabel('t')
+    ax.set_zlabel('z')
+    plt.show()
+    
+    plt.figure()
+    arr = np.isclose(X_test[:,1], 0.2)
+    xback = X_test[arr]
+    yback = best_y[arr]
+    plt.plot(xback[:,0], yback[:,i], 'o')

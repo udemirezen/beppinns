@@ -8,7 +8,7 @@ from matplotlib import cm
 import tensorflow as tf
 from mpl_toolkits.mplot3d import Axes3D
 
-#import deepxde1 as dde
+import deepxde1 as dde
 
 def saveplot(losshistory, train_state, issave=True, isplot=True):
     if isplot:
@@ -32,12 +32,12 @@ def plot_loss_history(losshistory):
     plt.figure()
     plt.semilogy(losshistory.steps, loss_train, label="Train loss")
     plt.semilogy(losshistory.steps, loss_test, label="Test loss")
-    for i in range(len(losshistory.metrics_test[0])):
-        plt.semilogy(
-            losshistory.steps,
-            np.array(losshistory.metrics_test)[:, i],
-            label="Test metric",
-        )
+#    for i in range(len(losshistory.metrics_test[0])):
+#        plt.semilogy(
+#            losshistory.steps,
+#            np.array(losshistory.metrics_test)[:, i],
+#            label="Test metric",
+#        )
     plt.xlabel("# Steps")
     plt.legend()
 
@@ -73,6 +73,9 @@ def plot_best_state(train_state):
     ax = Axes3D(fig)
     surf = ax.plot_trisurf(X, T, best_y[:,0], cmap=cm.jet, linewidth=0.1)
     fig.colorbar(surf, shrink=0.5, aspect=5)
+    ax.set_xlabel('x')
+    ax.set_ylabel('t')
+    ax.set_zlabel('z')
     plt.show()
 
     # Residual plot
@@ -127,29 +130,26 @@ def pde(x, y):
     dy_tt = tf.gradients(dy_t, x)[0][:, 1:2]
     return dy_tt - dy_xx
 
-geom = dde.geometry.Interval(-1, 1)
-timedomain = dde.geometry.TimeDomain(0, 2.49)
-geomtime = dde.geometry.GeometryXTime(geom, timedomain)
+def space_boundary(x, on_boundary):
+    return on_boundary and (np.isclose(x[0], -1) or np.isclose(x[0], 1))
 
-bc = dde.DirichletBC(
-    geomtime, lambda x: np.zeros((len(x), 1)), lambda _, on_boundary: on_boundary
-)
-ic1 = dde.DirichletIC(
-    geomtime, lambda x: -np.sin(np.pi * x[:, 0:1]), lambda _, on_initial: on_initial
-)
-ic2=dde.NeumannIC(geomtime, lambda x: np.zeros((len(x),1)), lambda _, on_initial: on_initial
-)
+def time_boundary(x, on_boundary):
+    return on_boundary and np.isclose(x[1], 0) and not (np.isclose(x[0], -1) or np.isclose(x[0], 1))
 
-data = dde.data.TimePDE(
-    geomtime, 1, pde, [bc, ic1, ic2], num_domain=1000, num_boundary=160, num_initial=160
-)
-net = dde.maps.FNN([2] + [20] * 3 + [1], "tanh", "Glorot normal")
+geomtime = dde.geometry.Rectangle([-1, 0], [1, 2.49])
+
+bc = dde.DirichletBC(geomtime, lambda x: np.zeros((len(x), 1)), space_boundary)
+ic1 = dde.DirichletBC(geomtime, lambda x: -np.sin(np.pi * x[:, 0:1]), time_boundary)
+ic2=dde.NeumannBC(geomtime, lambda x: np.zeros((len(x),1)), time_boundary)
+
+data = dde.data.PDE(geomtime, 1, pde, [bc, ic1, ic2], num_domain=1000, num_boundary=600)
+net = dde.maps.FNN([2] + [50] * 3 + [1], "tanh", "Glorot normal")
 model = dde.Model(data, net)
 
 model.compile("adam", lr=1e-3)
 model.train(epochs=20000) #was 15000 epochs
 model.compile("L-BFGS-B")
-losshistory, train_state = model.train()
+losshistory, train_state = model.train(epochs=5000)
 saveplot(losshistory, train_state, issave=True, isplot=True)
 
 X, y_true = gen_testdata()
